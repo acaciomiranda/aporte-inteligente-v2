@@ -62,7 +62,7 @@ v2/
 │   ├── database/
 │   │   ├── app.db          ← Banco SQLite (gerado automaticamente)
 │   │   └── db.js           ← Inicialização e esquema do banco
-│   ├── node_modules/       ← Dependências (não copiar para produção)
+│   ├── node_modules/       ← Dependências
 │   ├── package.json        ← Manifesto Node.js e dependências
 │   ├── package-lock.json   ← Lock de versões das dependências
 │   └── server.js           ← API REST (Express) + proxy Brapi + arquivos estáticos
