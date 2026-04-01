@@ -1,0 +1,20 @@
+{
+  "name": "aporte-inteligente-v2",
+  "version": "2.0.0",
+  "description": "Aporte Inteligente v2 — Cockpit Full-Stack para gestão de carteira de investimentos B3. Backend Node.js/Express com banco SQLite e frontend responsivo Mobile-First.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["investimentos", "b3", "carteira", "dividendos", "sqlite", "express"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
+}

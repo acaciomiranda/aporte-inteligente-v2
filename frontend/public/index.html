@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--
+  =============================================================================
+  APORTE INTELIGENTE — v2 | Interface do Usuário (HTML)
+  =============================================================================
+  Este arquivo define apenas a estrutura semântica da aplicação.
+  Toda a lógica está em script.js; o visual em style.css.
+
+  NOTAS IMPORTANTES PARA MANUTENÇÃO:
+  1. Os atributos onclick nos botões DEVEM usar o prefixo "window."
+     ex: onclick="window.toggleSecao(this)"
+     MOTIVO: script.js é um arquivo externo — funções definidas nele só ficam
+     acessíveis pelo HTML se forem explicitamente atribuídas ao objeto window.
+
+  2. A tag <script src="script.js"> deve usar </script> (sem barra invertida).
+     ex: CORRETO → <script src="script.js"></script>
+     ex: ERRADO  → <script src="script.js"><\/script>  ← quebra o carregamento
+
+  3. Esta página NÃO funciona com duplo-clique no arquivo.
+     Ela depende do servidor backend rodando em: http://localhost:3000
+     Para iniciar: cd backend && node server.js
+
+  DEPENDÊNCIAS EXTERNAS (CDN):
+  - Chart.js 3.9.1     → gráficos interativos
+  - html2canvas 1.4.1  → captura de gráficos como imagem PNG
+
+  METAS PWA (instalação como app no celular):
+  - manifest.json          → configuração do app (nome, ícone, cor)
+  - theme-color            → cor da barra de status do Android
+  - apple-mobile-web-app-* → suporte ao "Adicionar à Tela Inicial" no iOS
+  =============================================================================
+-->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#001435">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Aporte Inteligente - Gestão de Carteira e Dividendos</title>
+    
+    <!-- Mágica do PWA: Transforma o site num Aplicativo de telemóvel -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Ícone da Aba do Navegador (Opcional, mas recomendado) -->
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- Chart.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- html2canvas via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Link para o CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1 class="header-title">Aporte <span class="br-destaque">Inteligente</span></h1>
+        <p class="header-subtitle">Gestão de Carteira e Foco em Dividendos</p>
+    </header>
+
+    <main>
+        <!-- BOTÃO GLOBAL DE VISIBILIDADE -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 0.75rem;">
+            <button type="button" onclick="window.toggleTodasSecoes()" style="background-color: #757575; border: none; padding: 0.55rem 1rem; border-radius: 6px; color: white; cursor: pointer; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; touch-action: manipulation;">
+                👁️ Ocultar/Mostrar Seções
+            </button>
+        </div>
+
+        <!-- RESUMO GERAL -->
+        <section class="summary-container" id="resumoGeral">
+            <div class="summary-card">
+                <h3>Total Investido</h3>
+                <p id="resumoInvestido" class="investido">R$ 0,00</p>
+            </div>
+            <div class="summary-card">
+                <h3>Total Recebido (Dividendos)</h3>
+                <p id="resumoDividendos" class="dividendos">R$ 0,00</p>
+            </div>
+            <div class="summary-card">
+                <h3>Retorno (%)</h3>
+                <p id="resumoRetorno" class="retorno">0,00%</p>
+            </div>
+        </section>
+
+        <!-- FORMULÁRIO DE APORTES -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📈 Novo Aporte</h2>
+                <button type="button" onclick="window.toggleSecao(this)" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" title="Minimizar/Expandir">➖</button>
+            </div>
+            <div class="conteudo-secao">
+            <form id="formAporte">
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="codigoAporte">Código do Ativo</label>
+                        <input type="text" id="codigoAporte" placeholder="ex: BBAS3" required maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="setorAporte">Setor</label>
+                        <input type="text" id="setorAporte" placeholder="Ex: Bancos, Seguros, FII" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantidadeAporte">Quantidade</label>
+                        <input type="number" id="quantidadeAporte" placeholder="ex: 100" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="precoAporte">Preço Pago (R$)</label>
+                        <input type="number" id="precoAporte" placeholder="ex: 25.50" min="0.01" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataAporte">Data da Compra</label>
+                        <input type="date" id="dataAporte" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notaCorretagem">Link da Nota (Opcional)</label>
+                        <input type="url" id="notaCorretagem" placeholder="https://...">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" id="btnSubmitAporte">Salvar Aporte</button>
+                    <button type="button" class="btn-danger" id="btnCancelarAporte" style="display: none;">Cancelar</button>
+                </div>
+            </form>
+            </div>
+        </section>
+
+        <!-- CARTEIRA CONSOLIDADA -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>💼 Minha Carteira Consolidada</h2>
+                <button type="button" onclick="window.toggleSecao(this)" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" title="Minimizar/Expandir">➖</button>
+            </div>
+            <div class="conteudo-secao">
+            <div id="tabelaCarteiraContainer" class="table-responsive"></div>
+            </div>
+        </section>
+
+        <!-- GRÁFICOS E ANÁLISES -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📊 Gráficos e Análises</h2>
+                <button type="button" onclick="window.toggleSecao(this)" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" title="Minimizar/Expandir">➖</button>
+            </div>
+            <div class="conteudo-secao">
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3>Composição da Carteira</h3>
+                <button class="btn-copy-chart" onclick="copiarGrafico('chartComposicao')">📋 Copiar</button>
+                <canvas id="chartComposicao"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Valor Investido por Ativo</h3>
+                <button class="btn-copy-chart" onclick="copiarGrafico('chartValores')">📋 Copiar</button>
+                <canvas id="chartValores"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Composição por Setor</h3>
+                <button class="btn-copy-chart" onclick="copiarGrafico('graficoSetor')">📋 Copiar</button>
+                <canvas id="graficoSetor"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Evolução de Dividendos</h3>
+                <button class="btn-copy-chart" onclick="copiarGrafico('graficoDividendos')">📋 Copiar</button>
+                <canvas id="graficoDividendos"></canvas>
+            </div>
+        </div>
+            </div>
+        </section>
+
+        <!-- RADAR DE OPORTUNIDADES -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>🎯 Radar de Oportunidades (Preço Teto)</h2>
+                <button type="button" onclick="window.toggleSecao(this)" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" title="Minimizar/Expandir">➖</button>
+            </div>
+            <div class="conteudo-secao">
+            <form id="formRadar">
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="codigoRadar">Código do Ativo</label>
+                        <input type="text" id="codigoRadar" placeholder="ex: BBAS3" required maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="precoTeto">Preço Teto (R$)</label>
+                        <input type="number" id="precoTeto" placeholder="ex: 25.50" min="0.01" step="0.01" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-radar">Adicionar ao Radar</button>
+            </form>
+            <div id="radarContainer" class="radar-container"></div>
+            </div>
+        </section>
+
+        <!-- REGISTRO DE DIVIDENDOS E JCP -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>💰 Registo de Dividendos e JCP</h2>
+                <button type="button" onclick="window.toggleSecao(this)" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" title="Minimizar/Expandir">➖</button>
+            </div>
+            <div class="conteudo-secao">
+            <form id="formDividendos">
+                <div class="form-container">
+                    <div class="form-group">
+                        <label for="codigoDividendo">Código do Ativo</label>
+                        <input type="text" id="codigoDividendo" placeholder="ex: BBAS3" required maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="valorDividendo">Valor Recebido (R$)</label>
+                        <input type="number" id="valorDividendo" placeholder="ex: 50.00" min="0.01" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataPagamento">Data do Pagamento</label>
+                        <input type="date" id="dataPagamento" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricaoDividendo">Descrição</label>
+                        <input type="text" id="descricaoDividendo" placeholder="Ex: JCP, Dividendo, Fração">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-dividendo" id="btnSubmitDividendo">Salvar Dividendo</button>
+                    <button type="button" class="btn-danger" id="btnCancelarDividendo" style="display: none;">Cancelar</button>
+                </div>
+            </form>
+            </div>
+        </section>
+
+        <!-- HISTÓRICO DE OPERAÇÕES -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📋 Histórico de Operações</h2>
+                <button type="button" onclick="window.toggleSecao(this)" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" title="Minimizar/Expandir">➖</button>
+            </div>
+            <div class="conteudo-secao">
+            <div class="card-header">
+                <button id="btnExportarAportes" class="btn-export">📥 Exportar Operações (CSV)</button>
+                <input type="file" id="fileImportAportes" accept=".csv" style="display: none;">
+                <button type="button" id="btnImportarAportes" class="btn-import">📤 Importar CSV</button>
+                <button type="button" id="btnModeloAportes" class="btn-modelo">📄 Baixar Modelo</button>
+            </div>
+            <div id="tabelaContainer" class="table-responsive"></div>
+            </div>
+        </section>
+
+        <!-- EVOLUÇÃO DE DIVIDENDOS -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>📈 Evolução de Dividendos</h2>
+                <button type="button" onclick="window.toggleSecao(this)" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" title="Minimizar/Expandir">➖</button>
+            </div>
+            <div class="conteudo-secao">
+            <div class="card-header">
+                <button id="btnExportarDividendos" class="btn-export">📥 Exportar Dividendos (CSV)</button>
+                <input type="file" id="fileImportDividendos" accept=".csv" style="display: none;">
+                <button type="button" id="btnImportarDividendos" class="btn-import">📤 Importar CSV</button>
+                <button type="button" id="btnModeloDividendos" class="btn-modelo">📄 Baixar Modelo</button>
+            </div>
+            <div id="tabelaDividendosContainer" class="table-responsive"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Aporte Inteligente - Construindo patrimônio e renda passiva no longo prazo.</p>
+        <p style="font-size: 0.75rem; margin-top: 10px; opacity: 0.7;">
+            <a href="[https://www.flaticon.com/br/icones-gratis/financa](https://www.flaticon.com/br/icones-gratis/financa)" title="finança ícones" target="_blank" style="color: inherit; text-decoration: underline;">Finança ícones criados por DinosoftLabs - Flaticon</a>
+        </p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
