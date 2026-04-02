@@ -11,6 +11,19 @@ O **Aporte Inteligente v2** é a evolução do cockpit financeiro pessoal para i
 
 ---
 
+## 🌐 Demonstração Online
+
+Você pode visualizar a interface e as funcionalidades do projeto através do link abaixo:
+
+**Link do Projeto:** [https://aporte-inteligente.vercel.app/](https://aporte-inteligente.vercel.app/)
+
+> [!NOTE]
+> Esta versão hospedada na Vercel serve apenas para **visualização e apresentação do projeto**. Como se trata de uma aplicação Full-Stack que requer um banco de dados SQLite local para persistência real, os dados inseridos na versão online são temporários ou demonstrativos. Para uso pessoal e seguro dos seus dados, recomenda-se a [instalação local](#⚙️-como-executar).
+
+---
+
+---
+
 ## 🆕 Novidades da v2 (em relação à v1)
 
 | Recurso | v1 (Estática) | v2 (Full-Stack) |
@@ -62,7 +75,7 @@ v2/
 │   ├── database/
 │   │   ├── app.db          ← Banco SQLite (gerado automaticamente)
 │   │   └── db.js           ← Inicialização e esquema do banco
-│   ├── node_modules/       ← Dependências
+│   ├── node_modules/       ← Dependências (não copiar para produção)
 │   ├── package.json        ← Manifesto Node.js e dependências
 │   ├── package-lock.json   ← Lock de versões das dependências
 │   └── server.js           ← API REST (Express) + proxy Brapi + arquivos estáticos
