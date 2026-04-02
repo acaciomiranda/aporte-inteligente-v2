@@ -129,10 +129,17 @@ async function migrarDadosLocais() {
 window.mostrarAlerta = function (msg, tipo = 'success') {
     const box = document.getElementById('alertaBox');
     if (!box) return;
+    
+    // Limpa classes anteriores e define a nova
+    box.className = 'alerta ' + tipo;
     box.textContent = msg;
-    box.style.backgroundColor = tipo === 'success' ? 'var(--cor-sucesso)' : (tipo === 'aviso' ? 'var(--cor-aviso)' : 'var(--cor-erro)');
     box.style.display = 'block';
-    setTimeout(() => box.style.display = 'none', 3500);
+    
+    // Esconde após 3.5 segundos
+    if (window.alertaTimeout) clearTimeout(window.alertaTimeout);
+    window.alertaTimeout = setTimeout(() => {
+        box.style.display = 'none';
+    }, 3500);
 };
 
 window.toggleSecao = function (botao) {
@@ -184,6 +191,17 @@ window.copiarGrafico = async function (canvasId) {
                 new ClipboardItem({ 'image/png': blob })
             ]);
             window.mostrarAlerta('Card completo copiado (título + gráfico)!', 'success');
+            
+            // Feedback visual no próprio botão
+            if (btnCopia) {
+                const textoOriginal = btnCopia.innerHTML;
+                btnCopia.innerHTML = '✅ Copiado!';
+                btnCopia.classList.add('btn-sucesso-temp');
+                setTimeout(() => {
+                    btnCopia.innerHTML = textoOriginal;
+                    btnCopia.classList.remove('btn-sucesso-temp');
+                }, 2000);
+            }
         } else {
             // Fallback: Download da imagem caso o browser seja antigo ou não esteja em HTTPS
             const link = document.createElement('a');
