@@ -152,18 +152,47 @@ window.toggleTodasSecoes = function () {
     });
 };
 
+// ========== CORREÇÃO: copiarGrafico ==========
+// Lê diretamente o <canvas> do Chart.js, sem depender do html2canvas.
+// Tenta primeiro a Clipboard API (Chrome/Edge modernos com HTTPS).
+// Se não estiver disponível ou o utilizador negar permissão, faz o
+// fallback silencioso de download da imagem PNG.
 window.copiarGrafico = async function (canvasId) {
-    try {
-        const card = document.getElementById(canvasId).closest('.chart-wrapper');
-        const btn = card.querySelector('button');
-        btn.style.display = 'none';
-        const canvasGerado = await html2canvas(card, { backgroundColor: '#ffffff', scale: 2 });
-        btn.style.display = 'block';
-        canvasGerado.toBlob(async (blob) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        window.mostrarAlerta('Gráfico não encontrado.', 'erro');
+        return;
+    }
+
+    // Tenta copiar via Clipboard API (requer HTTPS + permissão do browser)
+    if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+        try {
+            const blob = await new Promise((resolve, reject) => {
+                canvas.toBlob((b) => {
+                    if (b) resolve(b);
+                    else reject(new Error('toBlob falhou'));
+                }, 'image/png');
+            });
             await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-            window.mostrarAlerta('Gráfico copiado!', 'success');
-        });
-    } catch (e) { window.mostrarAlerta('Erro ao copiar.', 'erro'); }
+            window.mostrarAlerta('Gráfico copiado para a área de transferência!', 'success');
+            return;
+        } catch (e) {
+            // Permissão negada ou browser não suporta — cai no fallback abaixo
+            console.warn('Clipboard API indisponível, a usar fallback de download.', e);
+        }
+    }
+
+    // Fallback: download direto da imagem PNG
+    try {
+        const link = document.createElement('a');
+        link.download = canvasId + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        window.mostrarAlerta('Imagem guardada! (O seu browser não permite copiar directamente.)', 'aviso');
+    } catch (e) {
+        window.mostrarAlerta('Não foi possível copiar ou guardar o gráfico.', 'erro');
+        console.error('Erro no fallback de download do gráfico:', e);
+    }
 };
 
 // ========== 8. API BRAPI (Via Backend Seguro) ==========
@@ -263,18 +292,18 @@ function renderizarTabelaAportes(aportes) {
             </thead>
             <tbody>
                 ${ordenados.map(a => {
-                    const qtd = parseFloat(a.quantidade || a.qtd || 0);
-                    const preco = parseFloat(a.preco || a.precoPago || a.precoUnitario || 0);
-                    const total = qtd * preco;
-                    const data = a.data || a.dataAporte || a.dataCompra || '';
-                    const dataFmt = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
-                    const nota = a.nota || a.notaCorretagem || '';
-                    return `<tr style="border-bottom:1px solid #eee;">
+        const qtd = parseFloat(a.quantidade || a.qtd || 0);
+        const preco = parseFloat(a.preco || a.precoPago || a.precoUnitario || 0);
+        const total = qtd * preco;
+        const data = a.data || a.dataAporte || a.dataCompra || '';
+        const dataFmt = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
+        const nota = a.nota || a.notaCorretagem || '';
+        return `<tr style="border-bottom:1px solid #eee;">
                         <td style="padding:8px;font-weight:600;">${a.codigo || a.ativo || ''}</td>
                         <td style="padding:8px;">${a.setor || '-'}</td>
                         <td style="padding:8px;text-align:right;">${qtd.toLocaleString('pt-BR')}</td>
-                        <td style="padding:8px;text-align:right;">R$ ${preco.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-                        <td style="padding:8px;text-align:right;">R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                        <td style="padding:8px;text-align:right;">R$ ${preco.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="padding:8px;text-align:right;">R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td style="padding:8px;text-align:center;">${dataFmt}</td>
                         <td style="padding:8px;text-align:center;">${nota ? `<a href="${nota}" target="_blank" rel="noopener noreferrer" style="color:#1e88e5;">🔗</a>` : '-'}</td>
                         <td style="padding:8px;text-align:center;">
@@ -282,7 +311,7 @@ function renderizarTabelaAportes(aportes) {
                             <button onclick="window.removerAporte('${a.id}')" style="background:#e53935;color:white;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.8rem;">🗑️</button>
                         </td>
                     </tr>`;
-                }).join('')}
+    }).join('')}
             </tbody>
         </table>`;
 }
@@ -308,12 +337,12 @@ function renderizarTabelaDividendos(dividendos) {
             </thead>
             <tbody>
                 ${ordenados.map(d => {
-                    const valor = parseFloat(d.valor || d.valorRecebido || 0);
-                    const data = d.data || d.dataPagamento || '';
-                    const dataFmt = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
-                    return `<tr style="border-bottom:1px solid #eee;">
+        const valor = parseFloat(d.valor || d.valorRecebido || 0);
+        const data = d.data || d.dataPagamento || '';
+        const dataFmt = data ? new Date(data + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
+        return `<tr style="border-bottom:1px solid #eee;">
                         <td style="padding:8px;font-weight:600;">${d.codigo || d.ativo || ''}</td>
-                        <td style="padding:8px;text-align:right;">R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                        <td style="padding:8px;text-align:right;">R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td style="padding:8px;text-align:center;">${dataFmt}</td>
                         <td style="padding:8px;">${d.descricao || '-'}</td>
                         <td style="padding:8px;text-align:center;">
@@ -321,7 +350,7 @@ function renderizarTabelaDividendos(dividendos) {
                             <button onclick="window.removerDividendo('${d.id}')" style="background:#e53935;color:white;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.8rem;">🗑️</button>
                         </td>
                     </tr>`;
-                }).join('')}
+    }).join('')}
             </tbody>
         </table>`;
 }
@@ -359,17 +388,17 @@ function renderizarCarteiraConsolidada(aportes) {
             </thead>
             <tbody>
                 ${ativos.map(a => {
-                    const pm = a.qtd > 0 ? a.totalInvestido / a.qtd : 0;
-                    const pct = totalGeral > 0 ? (a.totalInvestido / totalGeral * 100) : 0;
-                    return `<tr style="border-bottom:1px solid #eee;">
+        const pm = a.qtd > 0 ? a.totalInvestido / a.qtd : 0;
+        const pct = totalGeral > 0 ? (a.totalInvestido / totalGeral * 100) : 0;
+        return `<tr style="border-bottom:1px solid #eee;">
                         <td style="padding:8px;font-weight:600;">${a.codigo}</td>
                         <td style="padding:8px;">${a.setor}</td>
                         <td style="padding:8px;text-align:right;">${a.qtd.toLocaleString('pt-BR')}</td>
-                        <td style="padding:8px;text-align:right;">R$ ${pm.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-                        <td style="padding:8px;text-align:right;">R$ ${a.totalInvestido.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+                        <td style="padding:8px;text-align:right;">R$ ${pm.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td style="padding:8px;text-align:right;">R$ ${a.totalInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td style="padding:8px;text-align:right;">${pct.toFixed(1)}%</td>
                     </tr>`;
-                }).join('')}
+    }).join('')}
             </tbody>
         </table>`;
 }
@@ -524,8 +553,8 @@ async function atualizarRadar() {
         const corFundo = precoAtual === null ? '#f9f9f9' : (abaixoTeto ? '#e8f5e9' : '#fce4e4');
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;margin-bottom:8px;border-radius:8px;background:${corFundo};border:1px solid #eee;">
             <span style="font-weight:700;font-size:1rem;">${codigo}</span>
-            <span>Teto: <strong>R$ ${precoTeto.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</strong></span>
-            <span>Atual: <strong>${precoAtual !== null ? 'R$ ' + precoAtual.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : 'N/A'}</strong></span>
+            <span>Teto: <strong>R$ ${precoTeto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+            <span>Atual: <strong>${precoAtual !== null ? 'R$ ' + precoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</strong></span>
             <span>${status}</span>
             <button onclick="window.removerRadar('${item.id || codigo}')" style="background:#e53935;color:white;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.8rem;">🗑️</button>
         </div>`;
