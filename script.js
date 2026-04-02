@@ -152,46 +152,52 @@ window.toggleTodasSecoes = function () {
     });
 };
 
-// ========== CORREÇÃO: copiarGrafico ==========
-// Lê diretamente o <canvas> do Chart.js, sem depender do html2canvas.
-// Tenta primeiro a Clipboard API (Chrome/Edge modernos com HTTPS).
-// Se não estiver disponível ou o utilizador negar permissão, faz o
-// fallback silencioso de download da imagem PNG.
+// ========== CORREÇÃO: copiarGrafico Completo ==========
+// Agora utiliza o html2canvas (incluído no index.html via CDN) para capturar o card todo (título + gráfico).
+// Isso resolve o problema de copiar apenas as colunas/barras.
 window.copiarGrafico = async function (canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) {
+    const canvasElement = document.getElementById(canvasId);
+    if (!canvasElement) {
         window.mostrarAlerta('Gráfico não encontrado.', 'erro');
         return;
     }
 
-    // Tenta copiar via Clipboard API (requer HTTPS + permissão do browser)
-    if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-        try {
-            const blob = await new Promise((resolve, reject) => {
-                canvas.toBlob((b) => {
-                    if (b) resolve(b);
-                    else reject(new Error('toBlob falhou'));
-                }, 'image/png');
-            });
-            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-            window.mostrarAlerta('Gráfico copiado para a área de transferência!', 'success');
-            return;
-        } catch (e) {
-            // Permissão negada ou browser não suporta — cai no fallback abaixo
-            console.warn('Clipboard API indisponível, a usar fallback de download.', e);
-        }
-    }
+    const card = canvasElement.closest('.chart-card') || canvasElement.parentElement;
+    const btnCopia = card.querySelector('.btn-copy-chart');
 
-    // Fallback: download direto da imagem PNG
+    // Oculte o botão "Copiar" temporariamente para ele não aparecer na imagem capturada
+    if (btnCopia) btnCopia.style.visibility = 'hidden';
+
     try {
-        const link = document.createElement('a');
-        link.download = canvasId + '.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        window.mostrarAlerta('Imagem guardada! (O seu browser não permite copiar directamente.)', 'aviso');
+        // Captura o card inteiro usando html2canvas
+        const canvasResult = await html2canvas(card, {
+            scale: 2, // Aumenta a resolução para ficar nítido
+            backgroundColor: '#ffffff', // Garante fundo branco (mesmo que o CSS mude)
+            logging: false,
+            useCORS: true
+        });
+
+        // Tenta copiar para a Área de Transferência (Clipboard API)
+        if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+            const blob = await new Promise(resolve => canvasResult.toBlob(resolve, 'image/png'));
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'image/png': blob })
+            ]);
+            window.mostrarAlerta('Card completo copiado (título + gráfico)!', 'success');
+        } else {
+            // Fallback: Download da imagem caso o browser seja antigo ou não esteja em HTTPS
+            const link = document.createElement('a');
+            link.download = `grafico_${canvasId}.png`;
+            link.href = canvasResult.toDataURL('image/png');
+            link.click();
+            window.mostrarAlerta('Imagem guardada! (Browser não suporta cópia direta de imagem)', 'aviso');
+        }
     } catch (e) {
-        window.mostrarAlerta('Não foi possível copiar ou guardar o gráfico.', 'erro');
-        console.error('Erro no fallback de download do gráfico:', e);
+        console.error('Erro ao capturar card com html2canvas:', e);
+        window.mostrarAlerta('Não foi possível capturar o card completo.', 'erro');
+    } finally {
+        // Devolve a visibilidade ao botão após o processo
+        if (btnCopia) btnCopia.style.visibility = 'visible';
     }
 };
 
