@@ -480,11 +480,22 @@ tr:hover {
     background: #f5f8ff;
     padding: 1rem;
     border-radius: 8px;
-    border-left: 4px solid var(--cor-azul-claro);
+    border-left: 4px solid var(--cor-azul-claro); /* Default */
     position: relative;
     font-size: 0.9rem;
     line-height: 1.7;
+    transition: transform 0.2s;
 }
+
+.radar-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Bordas dinâmicas conforme o status */
+.card-comprar { border-left-color: var(--cor-sucesso) !important; }
+.card-aguardar { border-left-color: var(--cor-erro) !important; }
+.card-sem-dados { border-left-color: #9e9e9e !important; }
 
 .radar-remove {
     position: absolute;
