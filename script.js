@@ -23,13 +23,13 @@ import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "ht
 // ========== 2. AS SUAS CHAVES DO FIREBASE (SUBSTITUA AQUI) ==========
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCdX34pNmEcLoi3PXL0Rlfn7sIDuMEVYbI",
-  authDomain: "aporte-inteligente.firebaseapp.com",
-  projectId: "aporte-inteligente",
-  storageBucket: "aporte-inteligente.firebasestorage.app",
-  messagingSenderId: "1036424237394",
-  appId: "1:1036424237394:web:b339723191b9920703ea8b",
-  measurementId: "G-PRP52LZ9MH"
+    apiKey: "AIzaSyCdX34pNmEcLoi3PXL0Rlfn7sIDuMEVYbI",
+    authDomain: "aporte-inteligente.firebaseapp.com",
+    projectId: "aporte-inteligente",
+    storageBucket: "aporte-inteligente.firebasestorage.app",
+    messagingSenderId: "1036424237394",
+    appId: "1:1036424237394:web:b339723191b9920703ea8b",
+    measurementId: "G-PRP52LZ9MH"
 };
 
 // ========== 3. INICIALIZAÇÃO DA NUVEM ==========
@@ -40,7 +40,7 @@ const appIdStr = "aporte-inteligente-v2";
 let currentUser = null;
 
 // ========== 4. SEU TOKEN DA BOLSA (BRAPI) ==========
-const API_TOKEN = 'fdsQfbe9JweNg4Xbfc7ZWB';
+
 
 // ========== 5. GERENCIADOR DE DADOS (NUVEM) ==========
 class GerenciadorDadosNuvem {
@@ -54,13 +54,13 @@ class GerenciadorDadosNuvem {
         const colRef = collection(db, 'artifacts', appIdStr, 'users', currentUser.uid, this.colecao);
         onSnapshot(colRef, (snapshot) => {
             this.dados = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            if(this.onUpdate) this.onUpdate();
+            if (this.onUpdate) this.onUpdate();
         }, (error) => console.error(`Erro ao ler ${this.colecao}:`, error));
     }
     obterTodos() { return this.dados; }
     async adicionar(item, forceId = null) {
         if (!currentUser) return;
-        const docId = forceId ? forceId.toString() : (Date.now().toString() + Math.random().toString().substring(2,5));
+        const docId = forceId ? forceId.toString() : (Date.now().toString() + Math.random().toString().substring(2, 5));
         item.id = docId;
         await setDoc(doc(db, 'artifacts', appIdStr, 'users', currentUser.uid, this.colecao, docId), item);
     }
@@ -87,61 +87,61 @@ onAuthStateChanged(auth, async (user) => {
     const txt = document.getElementById('cloud-text');
     if (user) {
         currentUser = user;
-        if(ind) ind.classList.add('online');
-        if(txt) txt.textContent = "Sincronizado na Nuvem";
-        
+        if (ind) ind.classList.add('online');
+        if (txt) txt.textContent = "Sincronizado na Nuvem";
+
         await migrarDadosLocais();
-        
+
         gAportes.onUpdate = atualizarInterface;
         gDividendos.onUpdate = atualizarInterface;
         gRadar.onUpdate = atualizarRadar;
-        
+
         gAportes.iniciarListener();
         gDividendos.iniciarListener();
         gRadar.iniciarListener();
     } else {
         currentUser = null;
-        if(ind) ind.classList.remove('online');
-        if(txt) txt.textContent = "Desconectado";
+        if (ind) ind.classList.remove('online');
+        if (txt) txt.textContent = "Desconectado";
     }
 });
 
 async function migrarDadosLocais() {
     const migrado = localStorage.getItem('migracao_firebase_v2');
     if (migrado) return;
-    
+
     const apLocal = JSON.parse(localStorage.getItem('mercadoBolsaBR_aportes')) || [];
     const divLocal = JSON.parse(localStorage.getItem('mercadoBolsaBR_dividendos')) || [];
     const radLocal = JSON.parse(localStorage.getItem('aporteInteligente_radar')) || [];
 
-    if(apLocal.length > 0 || divLocal.length > 0 || radLocal.length > 0) {
+    if (apLocal.length > 0 || divLocal.length > 0 || radLocal.length > 0) {
         window.mostrarAlerta('A sincronizar os seus dados antigos com a nuvem...', 'aviso');
         for (const a of apLocal) await gAportes.adicionar(a, a.id);
         for (const d of divLocal) await gDividendos.adicionar(d, d.id);
         for (const r of radLocal) await setDoc(doc(db, 'artifacts', appIdStr, 'users', currentUser.uid, 'radar', r.codigo), r);
-        
+
         localStorage.setItem('migracao_firebase_v2', 'true');
         window.mostrarAlerta('Dados guardados na Nuvem com sucesso!', 'success');
     }
 }
 
 // ========== 7. FUNÇÕES GLOBAIS (UX / UI) ==========
-window.mostrarAlerta = function(msg, tipo = 'success') {
+window.mostrarAlerta = function (msg, tipo = 'success') {
     const box = document.getElementById('alertaBox');
-    if(!box) return;
+    if (!box) return;
     box.textContent = msg;
     box.style.backgroundColor = tipo === 'success' ? 'var(--cor-sucesso)' : (tipo === 'aviso' ? 'var(--cor-aviso)' : 'var(--cor-erro)');
     box.style.display = 'block';
     setTimeout(() => box.style.display = 'none', 3500);
 };
 
-window.toggleSecao = function(botao) {
+window.toggleSecao = function (botao) {
     const conteudo = botao.parentElement.nextElementSibling;
-    if (conteudo.style.display === 'none') { conteudo.style.display = 'block'; botao.textContent = '➖'; } 
+    if (conteudo.style.display === 'none') { conteudo.style.display = 'block'; botao.textContent = '➖'; }
     else { conteudo.style.display = 'none'; botao.textContent = '➕'; }
 };
 
-window.toggleTodasSecoes = function() {
+window.toggleTodasSecoes = function () {
     todasOcultas = !todasOcultas;
     document.querySelectorAll('section.card, .summary-container').forEach(secao => {
         const botao = secao.querySelector('button[onclick*="toggleSecao"]');
@@ -152,7 +152,7 @@ window.toggleTodasSecoes = function() {
     });
 };
 
-window.copiarGrafico = async function(canvasId) {
+window.copiarGrafico = async function (canvasId) {
     try {
         const card = document.getElementById(canvasId).closest('.chart-wrapper');
         const btn = card.querySelector('button');
@@ -166,14 +166,16 @@ window.copiarGrafico = async function(canvasId) {
     } catch (e) { window.mostrarAlerta('Erro ao copiar.', 'erro'); }
 };
 
-// ========== 8. API BRAPI ==========
+// ========== 8. API BRAPI (Via Backend Seguro) ==========
 async function buscarCotacaoReal(codigo) {
-    if(API_TOKEN === 'COLOQUE_SEU_TOKEN_REAL_AQUI' || !API_TOKEN) return null;
     try {
-        const res = await fetch(`https://brapi.dev/api/quote/${codigo}?token=${API_TOKEN}`);
+        // Agora ele pede a cotação ao SEU servidor no Vercel, e não à Brapi diretamente
+        const res = await fetch(`/api/quote?codigo=${codigo}`);
         const data = await res.json();
         return data.results?.[0]?.regularMarketPrice || null;
-    } catch (e) { return null; }
+    } catch (e) {
+        return null;
+    }
 }
 
-// ========== 9. REGR
+
