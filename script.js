@@ -564,26 +564,52 @@ async function atualizarRadar() {
     if (!container) return;
     const itens = gRadar.obterTodos();
     if (!itens || itens.length === 0) {
-        container.innerHTML = '<p style="color:#888;padding:1rem 0;">Nenhum ativo no radar.</p>';
+        container.innerHTML = '<p style="grid-column: 1/-1; color:#888; padding:1rem 0; text-align:center;">Nenhum ativo no radar.</p>';
         return;
     }
-    container.innerHTML = '<p style="color:#888;padding:0.5rem 0;">A buscar cotações...</p>';
-    const rows = await Promise.all(itens.map(async item => {
+
+    // Mostra indicador de carregamento (bom para UX)
+    container.innerHTML = '<div style="grid-column: 1/-1; color:#888; padding:1rem 0; text-align:center;">A buscar cotações...</div>';
+
+    const cards = await Promise.all(itens.map(async item => {
         const codigo = item.codigo || item.ativo || '';
         const precoTeto = parseFloat(item.precoTeto || item.teto || 0);
         const precoAtual = await buscarCotacaoReal(codigo);
-        const abaixoTeto = precoAtual !== null && precoAtual <= precoTeto;
-        const status = precoAtual === null ? '⏳ Sem dados' : (abaixoTeto ? '🟢 Abaixo do teto' : '🔴 Acima do teto');
-        const corFundo = precoAtual === null ? '#f9f9f9' : (abaixoTeto ? '#e8f5e9' : '#fce4e4');
-        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;margin-bottom:8px;border-radius:8px;background:${corFundo};border:1px solid #eee;">
-            <span style="font-weight:700;font-size:1rem;">${codigo}</span>
-            <span>Teto: <strong>R$ ${precoTeto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
-            <span>Atual: <strong>${precoAtual !== null ? 'R$ ' + precoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</strong></span>
-            <span>${status}</span>
-            <button onclick="window.removerRadar('${item.id || codigo}')" style="background:#e53935;color:white;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:0.8rem;">🗑️</button>
-        </div>`;
+        
+        let statusTexto = 'Indisponível';
+        let statusClasse = 'status-indisponivel';
+        let cardClasse = 'card-sem-dados';
+        
+        if (precoAtual !== null) {
+            if (precoAtual <= precoTeto) {
+                statusTexto = 'Comprar';
+                statusClasse = 'status-compra';
+                cardClasse = 'card-comprar';
+            } else {
+                statusTexto = 'Aguardar';
+                statusClasse = 'status-aguardar';
+                cardClasse = 'card-aguardar';
+            }
+        }
+
+        const tetoFormat = precoTeto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const atualFormat = precoAtual !== null 
+            ? 'R$ ' + precoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) 
+            : 'Carregando...';
+
+        return `
+            <div class="radar-card ${cardClasse}">
+                <button class="radar-remove" onclick="window.removerRadar('${item.id || codigo}')" title="Remover">🗑️</button>
+                <div style="font-weight:700; font-size:1.1rem; color:var(--cor-azul-marinho); margin-bottom:0.5rem; display:flex; align-items:center; gap:6px;">
+                    🎯 ${codigo}
+                </div>
+                <div style="font-size:0.85rem; color:#555;">Preço Teto: <strong style="color:#222;">R$ ${tetoFormat}</strong></div>
+                <div style="font-size:0.85rem; color:#555; margin-bottom:0.6rem;">Cotação Atual: <strong style="color:#222;">${atualFormat}</strong></div>
+                <div class="radar-status ${statusClasse}">${statusTexto}</div>
+            </div>
+        `;
     }));
-    container.innerHTML = rows.join('');
+    container.innerHTML = cards.join('');
 }
 
 window.removerRadar = async function (id) {
