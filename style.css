@@ -461,6 +461,11 @@ tr:hover {
     transform: scale(1.1);
 }
 
+.btn-sucesso-temp {
+    background-color: var(--cor-sucesso) !important;
+    color: white !important;
+}
+
 /* ====================================================
    RADAR
    ==================================================== */
@@ -538,6 +543,12 @@ tr:hover {
     background: #ffcdd2;
     color: #c62828;
     border-left: 4px solid var(--cor-erro);
+}
+
+.alerta.aviso {
+    background: #fff9c4;
+    color: #f57c00;
+    border-left: 4px solid var(--cor-aviso);
 }
 
 /* ====================================================
