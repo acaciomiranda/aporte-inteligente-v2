@@ -58,46 +58,69 @@
 </head>
 
 <body>
-  <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cor-cinza-claro); display: flex; justify-content: center; align-items: center; z-index: 10000;">
-        <div style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center;">
-            <h1 class="header-title" style="color: var(--cor-azul-marinho); margin-bottom: 5px;">Aporte <span class="br-destaque">Inteligente</span></h1>
+    <div id="loginOverlay"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--cor-cinza-claro); display: flex; justify-content: center; align-items: center; z-index: 10000;">
+        <div
+            style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center;">
+            <h1 class="header-title" style="color: var(--cor-azul-marinho); margin-bottom: 5px;">Aporte <span
+                    class="br-destaque">Inteligente</span></h1>
             <p style="margin-bottom: 25px; color: #666; font-size: 0.9rem;">Acesse sua carteira segura na nuvem</p>
 
-            <div id="authMessage" style="margin-bottom: 15px; font-size: 0.85rem; color: var(--cor-erro); font-weight: bold;"></div>
+            <div id="authMessage"
+                style="margin-bottom: 15px; font-size: 0.85rem; color: var(--cor-erro); font-weight: bold;"></div>
 
             <form id="formLogin">
-                <input type="email" id="loginEmail" placeholder="Seu E-mail" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
-                <input type="password" id="loginSenha" placeholder="Sua Senha" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">Entrar</button>
+                <input type="email" id="loginEmail" placeholder="Seu E-mail" required
+                    style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="password" id="loginSenha" placeholder="Sua Senha" required
+                    style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                <button type="submit" class="btn-primary"
+                    style="width: 100%; padding: 12px; font-size: 1rem;">Entrar</button>
                 <div style="margin-top: 15px; display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <a href="#" id="linkCadastro" style="color: var(--cor-azul-claro); text-decoration: none;">Criar conta</a>
-                    <a href="#" id="linkEsqueciSenha" style="color: var(--cor-azul-claro); text-decoration: none;">Esqueci a senha</a>
+                    <a href="#" id="linkCadastro" style="color: var(--cor-azul-claro); text-decoration: none;">Criar
+                        conta</a>
+                    <a href="#" id="linkEsqueciSenha"
+                        style="color: var(--cor-azul-claro); text-decoration: none;">Esqueci a senha</a>
                 </div>
             </form>
 
             <form id="formCadastro" style="display: none;">
-                <input type="email" id="cadEmail" placeholder="Novo E-mail" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
-                <input type="password" id="cadSenha" placeholder="Nova Senha (mín. 6 letras/números)" required minlength="6" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; background-color: var(--cor-sucesso);">Cadastrar</button>
+                <input type="email" id="cadEmail" placeholder="Novo E-mail" required
+                    style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="password" id="cadSenha" placeholder="Nova Senha (mín. 6 letras/números)" required
+                    minlength="6"
+                    style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                <button type="submit" class="btn-primary"
+                    style="width: 100%; padding: 12px; font-size: 1rem; background-color: var(--cor-sucesso);">Cadastrar</button>
                 <div style="margin-top: 15px; font-size: 0.85rem;">
-                    <a href="#" id="linkVoltarLogin1" style="color: var(--cor-azul-claro); text-decoration: none;">Voltar para o Login</a>
+                    <a href="#" id="linkVoltarLogin1"
+                        style="color: var(--cor-azul-claro); text-decoration: none;">Voltar para o Login</a>
                 </div>
             </form>
 
             <form id="formEsqueciSenha" style="display: none;">
-                <input type="email" id="resetEmail" placeholder="E-mail de recuperação" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; background-color: var(--cor-aviso);">Enviar Link</button>
+                <input type="email" id="resetEmail" placeholder="E-mail de recuperação" required
+                    style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;">
+                <button type="submit" class="btn-primary"
+                    style="width: 100%; padding: 12px; font-size: 1rem; background-color: var(--cor-aviso);">Enviar
+                    Link</button>
                 <div style="margin-top: 15px; font-size: 0.85rem;">
-                    <a href="#" id="linkVoltarLogin2" style="color: var(--cor-azul-claro); text-decoration: none;">Voltar para o Login</a>
+                    <a href="#" id="linkVoltarLogin2"
+                        style="color: var(--cor-azul-claro); text-decoration: none;">Voltar para o Login</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="alertaBox" class="alerta" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
-    <header>
-        <h1 class="header-title">Aporte <span class="br-destaque">Inteligente</span></h1>
-        <p class="header-subtitle">Gestão de Carteira e Foco em Dividendos</p>
+    <div id="alertaBox" class="alerta"
+        style="display: none; position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+    </div>
+    <header style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="header-title">Aporte <span class="br-destaque">Inteligente</span></h1>
+            <p class="header-subtitle">Gestão de Carteira e Foco em Dividendos</p>
+        </div>
+        <button onclick="fazerLogout()" style="background: transparent; border: 1px solid white; color: white; padding: 5px 15px; border-radius: 4px; cursor: pointer;">Sair</button>
     </header>
 
     <main>
