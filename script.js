@@ -17,7 +17,7 @@ const paletaCores = ['#001435', '#FDB913', '#1e88e5', '#43a047', '#e53935', '#fb
 
 // ========== 1. IMPORTAÇÕES DO FIREBASE ==========
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // ========== 2. AS SUAS CHAVES DO FIREBASE (SUBSTITUA AQUI) ==========
@@ -79,16 +79,77 @@ const gAportes = new GerenciadorDadosNuvem('aportes');
 const gDividendos = new GerenciadorDadosNuvem('dividendos');
 const gRadar = new GerenciadorDadosNuvem('radar');
 
-// ========== 6. AUTENTICAÇÃO E MIGRAÇÃO ==========
-signInAnonymously(auth).catch((error) => console.error("Erro no Auth Anônimo:", error));
+// ========== 6. AUTENTICAÇÃO COM E-MAIL E SENHA ==========
 
+// Impede que o script falhe caso o HTML ainda não tenha os elementos
+window.addEventListener('DOMContentLoaded', () => {
+    const loginOverlay = document.getElementById('loginOverlay');
+    const authMessage = document.getElementById('authMessage');
+
+    // Troca de telas no formulário
+    if(document.getElementById('linkCadastro')) {
+        document.getElementById('linkCadastro').onclick = (e) => { e.preventDefault(); document.getElementById('formLogin').style.display='none'; document.getElementById('formCadastro').style.display='block'; if(authMessage) authMessage.textContent=''; };
+        document.getElementById('linkEsqueciSenha').onclick = (e) => { e.preventDefault(); document.getElementById('formLogin').style.display='none'; document.getElementById('formEsqueciSenha').style.display='block'; if(authMessage) authMessage.textContent=''; };
+        document.getElementById('linkVoltarLogin1').onclick = (e) => { e.preventDefault(); document.getElementById('formCadastro').style.display='none'; document.getElementById('formLogin').style.display='block'; if(authMessage) authMessage.textContent=''; };
+        document.getElementById('linkVoltarLogin2').onclick = (e) => { e.preventDefault(); document.getElementById('formEsqueciSenha').style.display='none'; document.getElementById('formLogin').style.display='block'; if(authMessage) authMessage.textContent=''; };
+    }
+
+    // Ações do Firebase
+    if(document.getElementById('formLogin')) {
+        document.getElementById('formLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try { 
+                await signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginSenha').value); 
+            } catch(error) { 
+                if(authMessage) authMessage.textContent = 'Erro ao entrar. Verifique e-mail e senha.'; 
+            }
+        });
+    }
+
+    if(document.getElementById('formCadastro')) {
+        document.getElementById('formCadastro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try { 
+                await createUserWithEmailAndPassword(auth, document.getElementById('cadEmail').value, document.getElementById('cadSenha').value); 
+            } catch(error) { 
+                if(authMessage) authMessage.textContent = 'Erro ao criar conta. A senha deve ter 6+ caracteres ou o e-mail já existe.'; 
+            }
+        });
+    }
+
+    if(document.getElementById('formEsqueciSenha')) {
+        document.getElementById('formEsqueciSenha').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try { 
+                await sendPasswordResetEmail(auth, document.getElementById('resetEmail').value);
+                if(authMessage) {
+                    authMessage.style.color = 'green'; 
+                    authMessage.textContent = 'Link de recuperação enviado para o seu e-mail!';
+                }
+            } catch(error) { 
+                if(authMessage) {
+                    authMessage.style.color = 'red'; 
+                    authMessage.textContent = 'Erro ao enviar e-mail. Verifique se o endereço está correto.'; 
+                }
+            }
+        });
+    }
+});
+
+// Função para botão de Sair (Logout)
+window.fazerLogout = () => { signOut(auth); };
+
+// O "Cão de Guarda" que verifica quem está logado
 onAuthStateChanged(auth, async (user) => {
+    const loginOverlay = document.getElementById('loginOverlay');
     const ind = document.getElementById('cloud-indicator');
     const txt = document.getElementById('cloud-text');
+    
     if (user) {
         currentUser = user;
+        if(loginOverlay) loginOverlay.style.display = 'none'; // Esconde a tela de login
         if (ind) ind.classList.add('online');
-        if (txt) txt.textContent = "Sincronizado na Nuvem";
+        if (txt) txt.textContent = "Sincronizado na Nuvem (" + user.email + ")";
 
         await migrarDadosLocais();
 
@@ -101,6 +162,7 @@ onAuthStateChanged(auth, async (user) => {
         gRadar.iniciarListener();
     } else {
         currentUser = null;
+        if(loginOverlay) loginOverlay.style.display = 'flex'; // Mostra a tela de login
         if (ind) ind.classList.remove('online');
         if (txt) txt.textContent = "Desconectado";
     }
@@ -160,8 +222,6 @@ window.toggleTodasSecoes = function () {
 };
 
 // ========== CORREÇÃO: copiarGrafico Completo ==========
-// Agora utiliza o html2canvas (incluído no index.html via CDN) para capturar o card todo (título + gráfico).
-// Isso resolve o problema de copiar apenas as colunas/barras.
 window.copiarGrafico = async function (canvasId) {
     const canvasElement = document.getElementById(canvasId);
     if (!canvasElement) {
